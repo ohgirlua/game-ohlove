@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OH LOVE</title>
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #e9b8cd;
+    overflow: hidden;
+}
+
+/* Фон стартового екрану */
+body {
+    background: url("background.png") no-repeat center top;
+    background-size: cover;
+}
+
+/* Кнопка старт */
+.open-btn {
+    position: absolute;
+    top: 28%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 8%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+/* затемнення */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.3s;
+}
+
+.modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* карточка */
+.card-container {
+    perspective: 1200px;
+}
+
+.card {
+    width: 85vw;
+    max-width: 400px;
+    aspect-ratio: 2 / 3;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(.4,2,.6,1);
+}
+
+.card.flip {
+    transform: rotateY(180deg);
+}
+
+.card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.card-front {
+    background: white;
+}
+
+.card-back {
+    transform: rotateY(180deg);
+}
+
+.card-face img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Фінальний екран */
+.finish-screen {
+    position: fixed;
+    inset: 0;
+    background: url("finish.png") no-repeat center top;
+    background-size: cover;
+}
+
+/* Кнопка перезапуску */
+.restart-btn {
+    position: absolute;
+    top: 28%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 8%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<button class="open-btn" onclick="openCard()"></button>
+
+<div class="modal" id="modal">
+    <div id="content"></div>
+</div>
+
+<script>
+let totalCards = 99;
+let usedCards = JSON.parse(localStorage.getItem("usedCards")) || [];
+
+function saveProgress() {
+    localStorage.setItem("usedCards", JSON.stringify(usedCards));
+}
+
+function getRandomCard() {
+    if (usedCards.length === totalCards) {
+        showFinish();
+        return null;
+    }
+
+    let random;
+    do {
+        random = Math.floor(Math.random() * totalCards) + 1;
+    } while (usedCards.includes(random));
+
+    usedCards.push(random);
+    saveProgress();
+    return random;
+}
+
+function openCard() {
+    showNextCard();
+}
+
+function showNextCard() {
+
+    let random = getRandomCard();
+    if (!random) return;
+
+    let content = document.getElementById("content");
+
+    content.innerHTML = `
+        <div class="card-container">
+            <div class="card" id="card" onclick="flipAndNext()">
+                <div class="card-face card-front"></div>
+                <div class="card-face card-back">
+                    <img src="cards/Game ${random}.png">
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("modal").classList.add("active");
+
+    setTimeout(() => {
+        document.getElementById("card").classList.add("flip");
+    }, 100);
+}
+
+function flipAndNext() {
+
+    let card = document.getElementById("card");
+
+    card.style.transform = "scale(0.9)";
+    card.style.opacity = "0";
+
+    setTimeout(() => {
+        showNextCard();
+    }, 300);
+}
+
+function showFinish() {
+
+    let content = document.getElementById("content");
+
+    content.innerHTML = `
+        <div class="finish-screen">
+            <button class="restart-btn" onclick="restartGame()"></button>
+        </div>
+    `;
+
+    document.getElementById("modal").classList.add("active");
+}
+
+function restartGame() {
+    usedCards = [];
+    saveProgress();
+    document.getElementById("modal").classList.remove("active");
+}
+</script>
+
+</body>
+</html>
